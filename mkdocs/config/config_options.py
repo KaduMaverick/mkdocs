@@ -63,37 +63,6 @@ class SubConfig(BaseConfigOption):
         return config
 
 
-class ConfigItems(BaseConfigOption):
-    """
-    Config Items Option
-
-    Validates a list of mappings that all must match the same set of
-    options.
-    """
-
-    def __init__(self, *config_options, **kwargs):
-        BaseConfigOption.__init__(self)
-        self.item_config = SubConfig(*config_options)
-        self.required = kwargs.get('required', False)
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.item_config}'
-
-    def run_validation(self, value):
-        if value is None:
-            if self.required:
-                raise ValidationError("Required configuration not provided.")
-            else:
-                return ()
-
-        if not isinstance(value, Sequence):
-            raise ValidationError(
-                f'Expected a sequence of mappings, but a ' f'{type(value)} was given.'
-            )
-
-        return [self.item_config.validate(item) for item in value]
-
-
 class OptionallyRequired(BaseConfigOption):
     """
     A subclass of BaseConfigOption that adds support for default values and
@@ -130,6 +99,52 @@ class OptionallyRequired(BaseConfigOption):
                 raise ValidationError("Required configuration not provided.")
 
         return self.run_validation(value)
+
+
+class ListOfItems(OptionallyRequired):
+    """
+    Validates a homogenous list of items.
+    """
+
+    def __init__(self, option_type, default=[], required=False):
+        super().__init__(default, required)
+        self.option_type = option_type
+        self.option_type.warnings = self.warnings
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}: {self.option_type}'
+
+    def pre_validation(self, config, key_name):
+        self._config = config
+        self._key_name = key_name
+
+    def run_validation(self, value):
+        if not isinstance(value, Sequence):
+            raise ValidationError(f'Expected a sequence of items, but a {type(value)} was given.')
+
+        result = []
+        for item in value:
+            try:
+                config, key_name = self._config, self._key_name
+            except AttributeError:  # Somehow `pre_validation` wasn't run
+                result.append(self.option_type.validate(item))
+            else:
+                self.option_type.pre_validation(config, key_name)
+                result.append(self.option_type.validate(item))
+                self.option_type.post_validation(config, key_name)
+        return result
+
+
+class ConfigItems(ListOfItems):
+    """
+    Config Items Option
+
+    Validates a list of mappings that all must match the same set of
+    options.
+    """
+
+    def __init__(self, *config_options, required=False):
+        super().__init__(SubConfig(*config_options), required=required)
 
 
 class Type(OptionallyRequired):
@@ -426,36 +441,16 @@ class File(FilesystemObject):
     name = 'file'
 
 
-class ListOfPaths(OptionallyRequired):
+class ListOfPaths(ListOfItems):
     """
     List of Paths Config Option
 
     A list of file system paths. Raises an error if one of the paths does not exist.
     """
 
-    def __init__(self, default=[], required=False):
-        self.config_dir = None
-        super().__init__(default, required)
-
-    def pre_validation(self, config, key_name):
-        self.config_dir = (
-            os.path.dirname(config.config_file_path) if config.config_file_path else None
-        )
-
-    def run_validation(self, value):
-        if not isinstance(value, list):
-            raise ValidationError(f"Expected a list, got {type(value)}")
-        if len(value) == 0:
-            return
-        paths = []
-        for path in value:
-            if self.config_dir and not os.path.isabs(path):
-                path = os.path.join(self.config_dir, path)
-            if not os.path.exists(path):
-                raise ValidationError(f"The path {path} does not exist.")
-            path = os.path.abspath(path)
-            paths.append(path)
-        return paths
+    def __init__(self, default=[], required=False, option_type=None):
+        self.default = default
+        super().__init__(option_type or FilesystemObject(exists=True), required=required)
 
 
 class SiteDir(Dir):
