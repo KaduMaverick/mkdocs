@@ -53,17 +53,17 @@ def get_schema():
         'use_directory_urls': config_options.Type(bool, default=True),
         # Specify a link to the project source repo to be included
         # in the documentation pages.
-        'repo_url': config_options.RepoURL(),
+        'repo_url': config_options.URL(),
         # A name to use for the link to the project source repo.
         # Default, If repo_url is unset then None, otherwise
         # "GitHub", "Bitbucket" or "GitLab" for known url or Hostname
         # for unknown urls.
-        'repo_name': config_options.Type(str),
+        'repo_name': config_options.RepoName('repo_url'),
         # Specify a URI to the docs dir in the project source repo, relative to the
         # repo_url. When set, a link directly to the page in the source repo will
         # be added to the generated HTML. If repo_url is not set also, this option
         # is ignored.
-        'edit_uri': config_options.Type(str),
+        'edit_uri': config_options.EditURI('repo_url'),
         # Specify which css or javascript files from the docs directory should be
         # additionally included in the site.
         'extra_css': config_options.Type(list, default=[]),
