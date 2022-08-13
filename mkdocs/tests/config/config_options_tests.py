@@ -282,70 +282,59 @@ class URLTest(unittest.TestCase):
 
 
 class RepoURLTest(unittest.TestCase):
-    def test_repo_name_github(self):
+    schema = {
+        'repo_url': config_options.RepoURL(),
+        'repo_name': config_options.Type(str),
+        'edit_uri': config_options.Type(str),
+    }.items()
 
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://github.com/mkdocs/mkdocs"}
-        option.post_validation(config, 'repo_url')
+    def _config(self, data):
+        c = Config(self.schema)
+        c.load_dict(data)
+        errors, warnings = c.validate()
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+        return c
+
+    def test_repo_name_github(self):
+        config = self._config({'repo_url': "https://github.com/mkdocs/mkdocs"})
         self.assertEqual(config['repo_name'], "GitHub")
 
     def test_repo_name_bitbucket(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://bitbucket.org/gutworth/six/"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://bitbucket.org/gutworth/six/"})
         self.assertEqual(config['repo_name'], "Bitbucket")
 
     def test_repo_name_gitlab(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://gitlab.com/gitlab-org/gitlab-ce/"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://gitlab.com/gitlab-org/gitlab-ce/"})
         self.assertEqual(config['repo_name'], "GitLab")
 
     def test_repo_name_custom(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://launchpad.net/python-tuskarclient"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://launchpad.net/python-tuskarclient"})
         self.assertEqual(config['repo_name'], "Launchpad")
 
     def test_edit_uri_github(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://github.com/mkdocs/mkdocs"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://github.com/mkdocs/mkdocs"})
         self.assertEqual(config['edit_uri'], 'edit/master/docs/')
         self.assertEqual(config['repo_url'], "https://github.com/mkdocs/mkdocs")
 
     def test_edit_uri_bitbucket(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://bitbucket.org/gutworth/six/"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://bitbucket.org/gutworth/six/"})
         self.assertEqual(config['edit_uri'], 'src/default/docs/')
         self.assertEqual(config['repo_url'], "https://bitbucket.org/gutworth/six/")
 
     def test_edit_uri_gitlab(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://gitlab.com/gitlab-org/gitlab-ce/"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://gitlab.com/gitlab-org/gitlab-ce/"})
         self.assertEqual(config['edit_uri'], 'edit/master/docs/')
 
     def test_edit_uri_custom(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://launchpad.net/python-tuskarclient"}
-        option.post_validation(config, 'repo_url')
+        config = self._config({'repo_url': "https://launchpad.net/python-tuskarclient"})
         self.assertEqual(config.get('edit_uri'), '')
         self.assertEqual(config['repo_url'], "https://launchpad.net/python-tuskarclient")
 
     def test_repo_name_custom_and_empty_edit_uri(self):
-
-        option = config_options.RepoURL()
-        config = {'repo_url': "https://github.com/mkdocs/mkdocs", 'repo_name': 'mkdocs'}
-        option.post_validation(config, 'repo_url')
+        config = self._config(
+            {'repo_url': "https://github.com/mkdocs/mkdocs", 'repo_name': 'mkdocs'}
+        )
         self.assertEqual(config.get('edit_uri'), 'edit/master/docs/')
 
 
