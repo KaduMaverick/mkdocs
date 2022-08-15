@@ -63,6 +63,7 @@ def get_schema():
         # repo_url. When set, a link directly to the page in the source repo will
         # be added to the generated HTML. If repo_url is not set also, this option
         # is ignored.
+        'edit_uri_template': config_options.EditURITemplate('edit_uri'),
         'edit_uri': config_options.EditURI('repo_url'),
         # Specify which css or javascript files from the docs directory should be
         # additionally included in the site.

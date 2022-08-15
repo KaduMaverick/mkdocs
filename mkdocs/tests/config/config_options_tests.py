@@ -286,6 +286,7 @@ class RepoURLTest(unittest.TestCase):
         'repo_url': config_options.URL(),
         'repo_name': config_options.RepoName('repo_url'),
         'edit_uri': config_options.EditURI('repo_url'),
+        'edit_uri_template': config_options.EditURITemplate('edit_uri'),
     }.items()
 
     def _config(self, data):
