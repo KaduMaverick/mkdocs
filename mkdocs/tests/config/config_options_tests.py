@@ -460,9 +460,9 @@ class DirTest(unittest.TestCase):
         self.assertIsInstance(cfg['dir'], str)
         self.assertEqual(cfg['dir'], os.path.join(base_path, 'foo'))
 
-    def test_dir_is_config_dir_fails(self):
+    def test_site_dir_is_config_dir_fails(self):
         cfg = Config(
-            [('dir', config_options.Dir())],
+            [('dir', config_options.DocsDir())],
             config_file_path=os.path.join(os.path.abspath('.'), 'mkdocs.yml'),
         )
 

@@ -368,6 +368,9 @@ class FilesystemObject(Type):
     Base class for options that point to filesystem objects.
     """
 
+    existence_test = staticmethod(os.path.exists)
+    name = 'file or directory'
+
     def __init__(self, exists=False, **kwargs):
         super().__init__(type_=str, **kwargs)
         self.exists = exists
@@ -397,6 +400,8 @@ class Dir(FilesystemObject):
     existence_test = staticmethod(os.path.isdir)
     name = 'directory'
 
+
+class DocsDir(Dir):
     def post_validation(self, config, key_name):
         if config.config_file_path is None:
             return
